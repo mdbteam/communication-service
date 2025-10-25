@@ -1,6 +1,6 @@
-# app/auth_utils.py
+# communication-service/app/auth_utils.py
 import os
-from typing import Optional  # --- LÍNEA AÑADIDA ---
+from typing import Optional
 from fastapi import Depends, HTTPException, status, Query
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
@@ -10,7 +10,7 @@ from app.models import UserInDB
 
 SECRET_KEY = os.environ.get("SECRET_KEY")
 if not SECRET_KEY:
-    raise RuntimeError("SECRET_KEY no está configurada.")
+    raise RuntimeError("SECRET_KEY no está configurada en las variables de entorno.")
 
 ALGORITHM = "HS256"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
@@ -29,8 +29,9 @@ async def get_current_user_from_token(token: str = Depends(oauth2_scheme),
         return None
 
     cursor = conn.cursor()
+    # Traemos todos los campos
     cursor.execute(
-        "SELECT id_usuario, nombres, primer_apellido, correo, id_rol, estado FROM Usuarios WHERE id_usuario = ?",
+        "SELECT id_usuario, nombres, primer_apellido, correo, id_rol, estado, foto_url, genero, fecha_nacimiento FROM Usuarios WHERE id_usuario = ?",
         int(user_id))
     user_record = cursor.fetchone()
     cursor.close()
@@ -38,7 +39,8 @@ async def get_current_user_from_token(token: str = Depends(oauth2_scheme),
     if user_record is None:
         return None
 
-    return UserInDB(**dict(zip([column[0] for column in user_record.cursor_description], user_record)))
+    user_data = dict(zip([column[0] for column in user_record.cursor_description], user_record))
+    return UserInDB(**user_data)
 
 
 async def get_current_user_from_cookie_or_token(

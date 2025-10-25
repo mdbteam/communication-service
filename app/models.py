@@ -1,4 +1,4 @@
-# app/models.py
+# communication-service/app/models.py
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
@@ -7,7 +7,7 @@ class Message(BaseModel):
     id_mensaje: int
     id_conversacion: int
     id_emisor: int
-    emisor: str
+    emisor: str # Nombre completo
     contenido: str
     fecha_envio: datetime
 
@@ -18,6 +18,10 @@ class UserInDB(BaseModel):
     nombres: str
     primer_apellido: str
     correo: str
+    # Campos que necesitamos para la bandeja de entrada
+    foto_url: str
+    genero: Optional[str] = None
+    fecha_nacimiento: Optional[datetime] = None
 
 class LastMessage(BaseModel):
     contenido: str
@@ -30,3 +34,8 @@ class ConversacionInfo(BaseModel):
     otro_usuario_foto_url: str
     mensajes_no_leidos: int
     ultimo_mensaje: Optional[LastMessage] = None
+
+# Modelo para el formato de envío de WebSocket (3.3)
+class SendMessage(BaseModel):
+    id_destinatario: int
+    contenido: str
