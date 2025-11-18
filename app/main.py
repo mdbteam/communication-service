@@ -1,6 +1,7 @@
 # communication-service/app/main.py
 from fastapi import FastAPI, Depends, HTTPException, status, WebSocket, WebSocketDisconnect, APIRouter, Query
 from typing import List, Optional
+from fastapi.middleware.cors import CORSMiddleware
 import pyodbc
 import json
 from dotenv import load_dotenv
