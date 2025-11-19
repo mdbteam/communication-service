@@ -160,7 +160,7 @@ def get_chat_history_with_user(
 
 
 # --- ENDPOINT PARA MARCAR LEÍDO ---
-@app.post("/conversaciones/{id_conversacion}/leido", status_code=status.HTTP_204_NO_CONTENT, tags=["Chat"])
+@app.post("/api/conversaciones/{id_conversacion}/leido", status_code=status.HTTP_204_NO_CONTENT, tags=["Chat"])
 def mark_conversation_as_read(
         id_conversacion: int,
         current_user: UserInDB = Depends(get_current_user_from_cookie_or_token),
