@@ -37,11 +37,6 @@ app.add_middleware(
 )
 # --- CONFIGURACIÓN CORS ---
 
-
-# Creamos un router con el prefijo /api
-router = APIRouter(prefix="/api")
-
-
 @app.get("/", tags=["Status"])
 def root():
     return {"message": "Communication Service funcionando 🚀"}
@@ -109,7 +104,7 @@ def get_my_conversations(
 
 
 # --- ENDPOINT DE HISTORIAL (CRÍTICO - REQUERIMIENTO 3.4) ---
-@app.get("/chat/history/{id_otro_usuario}", response_model=List[Message], tags=["Chat"])
+@app.get("/history/{id_otro_usuario}", response_model=List[Message], tags=["Chat"])
 def get_chat_history_with_user(
         id_otro_usuario: int,
         current_user: UserInDB = Depends(get_current_user_from_cookie_or_token),
