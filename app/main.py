@@ -48,7 +48,7 @@ def root():
 
 
 # --- ENDPOINT DE BANDEJA DE ENTRADA (CON PREFIJO /api) ---
-@router.get("/conversaciones", response_model=List[ConversacionInfo], tags=["Chat"])
+@app.get("/conversaciones", response_model=List[ConversacionInfo], tags=["Chat"])
 def get_my_conversations(
         current_user: UserInDB = Depends(get_current_user_from_cookie_or_token),
         conn: pyodbc.Connection = Depends(get_db_connection)
@@ -109,7 +109,7 @@ def get_my_conversations(
 
 
 # --- ENDPOINT DE HISTORIAL (CRÍTICO - REQUERIMIENTO 3.4) ---
-@router.get("/chat/history/{id_otro_usuario}", response_model=List[Message], tags=["Chat"])
+@app.get("/chat/history/{id_otro_usuario}", response_model=List[Message], tags=["Chat"])
 def get_chat_history_with_user(
         id_otro_usuario: int,
         current_user: UserInDB = Depends(get_current_user_from_cookie_or_token),
@@ -155,7 +155,7 @@ def get_chat_history_with_user(
 
 
 # --- ENDPOINT PARA MARCAR LEÍDO (CON PREFIJO /api) ---
-@router.post("/conversaciones/{id_conversacion}/leido", status_code=status.HTTP_204_NO_CONTENT, tags=["Chat"])
+@app.post("/conversaciones/{id_conversacion}/leido", status_code=status.HTTP_204_NO_CONTENT, tags=["Chat"])
 def mark_conversation_as_read(
         id_conversacion: int,
         current_user: UserInDB = Depends(get_current_user_from_cookie_or_token),
@@ -178,9 +178,6 @@ def mark_conversation_as_read(
         cursor.close()
     return
 
-
-# Incluimos todas las rutas HTTP en la app con el prefijo /api
-app.include_router(router)
 
 
 # --- ENDPOINT WEBSOCKET (REFACTORIZADO) ---
