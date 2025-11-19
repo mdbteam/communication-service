@@ -1,5 +1,6 @@
 # communication-service/app/main.py
-from fastapi import FastAPI, Depends, HTTPException, status, WebSocket, WebSocketDisconnect, APIRouter, Query
+
+from fastapi import FastAPI, Depends, HTTPException, status, WebSocket, WebSocketDisconnect, Query
 from typing import List, Optional
 from fastapi.middleware.cors import CORSMiddleware
 import pyodbc
@@ -27,14 +28,15 @@ origins = [
     "*",  # solo para desarrollo
 ]
 
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,             # Permite enviar credenciales (cookies, auth headers)
-    allow_methods=["*"],                # Permite todos los métodos HTTP
-    allow_headers=["*"],                # Permite todas las cabeceras
+    allow_credentials=True,  # Permite enviar credenciales (cookies, auth headers)
+    allow_methods=["*"],  # Permite todos los métodos HTTP
+    allow_headers=["*"],  # Permite todas las cabeceras
 )
+
+
 # --- CONFIGURACIÓN CORS ---
 
 @app.get("/", tags=["Status"])
@@ -42,8 +44,8 @@ def root():
     return {"message": "Communication Service funcionando 🚀"}
 
 
-# --- ENDPOINT DE BANDEJA DE ENTRADA (CON PREFIJO /api) ---
-@app.get("/conversaciones", response_model=List[ConversacionInfo], tags=["Chat"])
+# --- ENDPOINT DE BANDEJA DE ENTRADA (CORREGIDO: /chat/conversaciones) ---
+@app.get("/chat/conversaciones", response_model=List[ConversacionInfo], tags=["Chat"])
 def get_my_conversations(
         current_user: UserInDB = Depends(get_current_user_from_cookie_or_token),
         conn: pyodbc.Connection = Depends(get_db_connection)
@@ -103,8 +105,8 @@ def get_my_conversations(
     return conversations
 
 
-# --- ENDPOINT DE HISTORIAL (CRÍTICO - REQUERIMIENTO 3.4) ---
-@app.get("/history/{id_otro_usuario}", response_model=List[Message], tags=["Chat"])
+# --- ENDPOINT DE HISTORIAL (CORREGIDO: /chat/history) ---
+@app.get("/chat/history/{id_otro_usuario}", response_model=List[Message], tags=["Chat"])
 def get_chat_history_with_user(
         id_otro_usuario: int,
         current_user: UserInDB = Depends(get_current_user_from_cookie_or_token),
@@ -141,7 +143,15 @@ def get_chat_history_with_user(
             id_conversacion
         )
         messages_db = cursor.fetchall()
+
+        # Mapeamos los datos de la BBDD a nuestro modelo Message de Pydantic
         messages = [Message(**dict(zip([column[0] for column in row.cursor_description], row))) for row in messages_db]
+
+        # 3. Marcar mensajes como leídos
+        # NOTA: Esto idealmente debería hacerse con una llamada separada al POST /leido,
+        # o ejecutarse aquí si es esencial para el flujo. Mantendremos el POST separado
+        # para reducir el tiempo de respuesta de este endpoint GET.
+
         return messages
     except pyodbc.Error as e:
         raise HTTPException(status_code=500, detail=f"Error BBDD: {e}")
@@ -149,7 +159,7 @@ def get_chat_history_with_user(
         cursor.close()
 
 
-# --- ENDPOINT PARA MARCAR LEÍDO (CON PREFIJO /api) ---
+# --- ENDPOINT PARA MARCAR LEÍDO ---
 @app.post("/conversaciones/{id_conversacion}/leido", status_code=status.HTTP_204_NO_CONTENT, tags=["Chat"])
 def mark_conversation_as_read(
         id_conversacion: int,
@@ -174,9 +184,7 @@ def mark_conversation_as_read(
     return
 
 
-
-# --- ENDPOINT WEBSOCKET (REFACTORIZADO) ---
-# (Va sin el prefijo /api)
+# --- ENDPOINT WEBSOCKET ---
 @app.websocket("/ws")
 async def websocket_endpoint(
         websocket: WebSocket,
